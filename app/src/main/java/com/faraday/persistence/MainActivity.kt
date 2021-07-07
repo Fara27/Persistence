@@ -1,7 +1,9 @@
 package com.faraday.persistence
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.room.Room
 import com.faraday.persistence.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -22,14 +24,35 @@ class MainActivity : AppCompatActivity() {
         myShoppingAdapter = ShoppingAdapter(myShoppingList)
         binding.recyclerView.adapter = myShoppingAdapter
 
+
+        val db = Room.databaseBuilder(
+            applicationContext,
+            ShoppingDatabase::class.java, "shopping-database"
+        ).allowMainThreadQueries().build()
+
+        val shoppingDAO = db.shoppingDao()
+
+        shoppingDAO.getAllShoppingItems().observe(this, {
+            myShoppingAdapter = ShoppingAdapter(it)
+            binding.recyclerView.adapter = myShoppingAdapter
+
+            myShoppingAdapter.notifyDataSetChanged()
+
+        })
+
+
         binding.button.setOnClickListener {
             val category : String = binding.categoryText.text.toString()
             val description : String = binding.descriptionText.text.toString()
 
             val shoppingItem = ShoppingModel(category, description)
-            myShoppingList.add(shoppingItem)
+            shoppingDAO.addShoppingItem(shoppingItem)
+
+
             //This update your recyclerView
             myShoppingAdapter.notifyDataSetChanged()
         }
+
+
     }
 }
